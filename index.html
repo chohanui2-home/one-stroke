@@ -525,7 +525,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
     }
 
     /* points */
-    var pr = Math.max(6.5, S * 0.028);
+    var pr = Math.max(7, S * 0.031);
     for (i = 0; i < pts.length; i++) {
       var cxp = sx(pts[i][0]), cyp = sx(pts[i][1]);
       ctx.beginPath();
@@ -564,7 +564,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
     if (h.start >= 0 && h.start < pts.length) {
       var pulse = 1 + 0.14 * Math.sin(st.dash / 9);
       ctx.beginPath();
-      ctx.arc(sx(pts[h.start][0]), sx(pts[h.start][1]), Math.max(6.5, S * 0.028) * 2.25 * pulse, 0, TAU);
+      ctx.arc(sx(pts[h.start][0]), sx(pts[h.start][1]), Math.max(7, S * 0.031) * 2.2 * pulse, 0, TAU);
       ctx.strokeStyle = '#4B5563';
       ctx.lineWidth = Math.max(2, S * 0.006);
       ctx.stroke();
