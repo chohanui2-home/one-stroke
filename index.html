@@ -310,6 +310,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
     { n: 5, name: '5단계', sub: '고수' }
   ];
   var DONE_KEY = 'onestroke.done.v1';
+  var ADVANCE_MS = 900;    /* how long '완성!' stays before the next problem */
   var SNAP = 8.2;          /* board units: touch radius around a point */
   var TAU = Math.PI * 2;
   var raf = window.requestAnimationFrame || function (fn) { return setTimeout(function () { fn(Date.now()); }, 60); };
@@ -323,6 +324,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
   var kept = {};            /* id -> {path, used} while switching puzzles */
   var doneMap = loadDone();
   var hintTimer = null, flashTimer = null;
+  var advanceTimer = null;   /* pending automatic move to the next problem */
 
   function $(id) { return document.getElementById(id); }
   function key(a, b) { return a < b ? a + '-' + b : b + '-' + a; }
@@ -653,6 +655,42 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
     st.complete = true;
     doneMap[cur().id] = 1;
     saveDone();
+    scheduleAdvance();
+  }
+
+  /* ------------------------------------------------------- auto advance */
+  /* 1-1 -> 1-2, ... 1-5 -> 2-1. The last problem (5-5) stays finished. */
+  function nextTarget() {
+    var i;
+    var same = puzzlesOf(st.stage);
+    for (i = 0; i < same.length; i++) {
+      if (same[i].no === st.no + 1) { return { stage: st.stage, no: same[i].no }; }
+    }
+    var later = puzzlesOf(st.stage + 1);
+    if (later.length) { return { stage: st.stage + 1, no: later[0].no }; }
+    return null;
+  }
+
+  /* Any deliberate move by the player cancels a waiting advance. */
+  function cancelAdvance() {
+    if (advanceTimer !== null) {
+      clearTimeout(advanceTimer);
+      advanceTimer = null;
+    }
+  }
+
+  function scheduleAdvance() {
+    cancelAdvance();
+    if (!nextTarget()) { return; }   /* 5-5: stay on the finished board */
+    var fromId = cur() ? cur().id : '';
+    advanceTimer = setTimeout(function () {
+      advanceTimer = null;
+      /* the board may have changed while we waited */
+      if (!st.complete || !cur() || cur().id !== fromId) { return; }
+      var t = nextTarget();
+      if (!t) { return; }
+      selectPuzzle(t.stage, t.no);
+    }, ADVANCE_MS);
   }
 
   function tapIndex(i) {
@@ -729,6 +767,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
   function undo() {
     var pz = cur();
     if (!pz) { return false; }
+    cancelAdvance();
     if (st.path.length > 1) {
       var b = st.path.pop();
       var a = st.path[st.path.length - 1];
@@ -749,6 +788,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
   }
 
   function resetPuzzle() {
+    cancelAdvance();
     st.path = [];
     st.used = {};
     st.hint = null;
@@ -913,6 +953,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
   }
 
   function selectStage(n) {
+    cancelAdvance();
     stashCurrent();
     st.stage = n;
     st.no = firstOpen(n);
@@ -923,6 +964,7 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
   }
 
   function selectPuzzle(stage, no) {
+    cancelAdvance();
     stashCurrent();
     st.stage = stage;
     st.no = no;
@@ -1054,6 +1096,10 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
     eulerFor: function (id, used, start) { return eulerSteps(byId(id), used || {}, start); },
     usedCount: usedCount,
     isComplete: function () { return st.complete; },
+    advancePending: function () { return advanceTimer !== null; },
+    advanceMs: ADVANCE_MS,
+    nextTarget: nextTarget,
+    cancelAdvance: cancelAdvance,
     doneMap: function () { return doneMap; },
     render: function () { fitCanvas(); render(); },
     edgeKey: key,
