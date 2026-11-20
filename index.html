@@ -904,13 +904,18 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,
     }
   }
 
+  function firstOpen(stage) {
+    var list = puzzlesOf(stage), i;
+    for (i = 0; i < list.length; i++) {
+      if (!doneMap[list[i].id]) { return list[i].no; }
+    }
+    return list.length ? list[0].no : 1;
+  }
+
   function selectStage(n) {
     stashCurrent();
     st.stage = n;
-    var list = puzzlesOf(n);
-    var no = list.length ? list[0].no : 1;
-    for (var i = 0; i < list.length; i++) { if (list[i].no === st.no) { no = st.no; } }
-    st.no = no;
+    st.no = firstOpen(n);
     loadState(st.stage + '-' + st.no);
     buildGrid();
     updateText();
