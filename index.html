@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>한붓그리기</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F4F6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23F3F4F6'/%3E%3Cpath d='M32 12l18 13-7 21H21l-7-21z' fill='none' stroke='%231F2937' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#F3F4F6;
+  --card:#FFFFFF;
+  --ink:#1F2937;
+  --ink2:#374151;
+  --ink3:#4B5563;
+  --muted:#6B7280;
+  --line:#E5E7EB;
+  --grid:#ECEEF2;
+  --unused:#CBD5E1;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,"Malgun Gothic","맑은 고딕",sans-serif;
+  font-size:15px;
+  line-height:1.4;
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+h1,h2,p{margin:0}
+
+/* ---------- 제목: 헤더 안에는 제목만, 유틸 버튼은 아래 별도 줄 ---------- */
+header.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 16px 2px;
+  padding-top:calc(8px + env(safe-area-inset-top));
+}
+header.topbar h1{
+  font-size:21px;
+  font-weight:800;
+  letter-spacing:-0.3px;
+  white-space:nowrap;
+  text-align:center;
+}
+.toptools{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  height:30px;
+  padding:0 12px;
+}
+.toptools button{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font:inherit;
+  font-size:11.5px;
+  padding:6px 8px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.toptools button:active{background:#E9EBEF}
+
+/* ---------- 게임 방식 한 줄 ---------- */
+.tagline{
+  padding:0 20px;
+  text-align:center;
+  font-size:12.5px;
+  line-height:1.35;
+  color:var(--muted);
+  word-break:keep-all;
+}
+
+/* ---------- 단계 선택 ---------- */
+.stages{
+  display:flex;
+  gap:6px;
+  padding:9px 12px 0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+}
+.stages::-webkit-scrollbar{display:none}
+.stage{
+  flex:1 1 0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  padding:6px 2px;
+  border:1.5px solid var(--line);
+  border-radius:11px;
+  background:var(--card);
+  font:inherit;
+  color:var(--ink2);
+  transition:border-color .12s ease, box-shadow .12s ease;
+}
+.stage b{font-size:12.5px;font-weight:700;white-space:nowrap}
+.stage span{font-size:10px;color:var(--muted);white-space:nowrap;line-height:1.2}
+.stage.on{border-color:var(--ink);box-shadow:0 1px 2px rgba(31,41,55,.10)}
+.stage.on b{font-weight:800}
+.stage.on span{color:var(--ink3)}
+.stage:active{background:#F7F8FA}
+
+/* ---------- 문제 선택 ---------- */
+.pzgrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  padding:8px 12px 0;
+}
+.pz{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-height:40px;
+  padding:8px 7px;
+  border:1.5px solid var(--line);
+  border-radius:11px;
+  background:var(--card);
+  font:inherit;
+  color:var(--ink2);
+  text-align:left;
+  overflow:hidden;
+}
+.pz .n{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--muted);min-width:9px}
+.pz .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pz .tk{flex:0 0 auto;margin-left:auto;font-size:11px;font-weight:700;color:#9AA3AF;visibility:hidden}
+.pz.done .tk{visibility:visible}
+.pz.on{border-color:var(--ink);color:var(--ink)}
+.pz.on .nm{font-weight:800}
+.pz:active{background:#F7F8FA}
+.pz.done .nm{color:var(--ink3)}
+
+/* ---------- 퍼즐 카드 ---------- */
+.card{
+  margin:8px 12px 0;
+  padding:10px 10px 10px;
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 1px 3px rgba(17,24,39,.06);
+}
+.cardhead{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:8px;
+  padding:1px 4px 8px;
+}
+.cardhead .title{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:-0.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.cardhead .meta{font-size:11px;color:var(--muted);white-space:nowrap}
+#cv{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:1 / 1;
+  border-radius:12px;
+  background:#FBFBFC;
+  border:1px solid #F1F2F5;
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+.guide{
+  margin:9px 2px 0;
+  text-align:center;
+  font-size:12.5px;
+  line-height:1.35;
+  color:var(--ink3);
+  min-height:17px;
+  word-break:keep-all;
+}
+.prog{
+  margin:3px 2px 0;
+  text-align:center;
+  font-size:11.5px;
+  color:var(--muted);
+  min-height:16px;
+}
+.hintmsg{
+  margin:8px 2px 0;
+  padding:8px 10px;
+  border-radius:9px;
+  background:#F3F4F6;
+  color:var(--ink2);
+  font-size:12px;
+  line-height:1.4;
+  text-align:center;
+  word-break:keep-all;
+}
+.hintmsg[hidden]{display:none}
+.btns{display:flex;gap:8px;margin-top:10px}
+.btns button{
+  flex:1 1 0;
+  padding:11px 2px;
+  border:1.5px solid var(--line);
+  border-radius:11px;
+  background:var(--card);
+  font:inherit;
+  font-size:12.5px;
+  font-weight:700;
+  color:var(--ink2);
+  white-space:nowrap;
+}
+.btns button:active{background:#F1F2F5}
+.btns button[disabled]{color:#AEB4BD}
+
+/* ---------- 참고 카드 ---------- */
+.note{
+  margin:10px 12px 20px;
+  margin-bottom:calc(20px + env(safe-area-inset-bottom));
+  padding:11px 13px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+}
+.note summary{
+  list-style:none;
+  cursor:pointer;
+  font-size:12.5px;
+  font-weight:700;
+  color:var(--ink2);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.note summary::-webkit-details-marker{display:none}
+.note summary .arw{
+  margin-left:auto;
+  font-size:10px;
+  color:var(--muted);
+  transition:transform .15s ease;
+}
+.note[open] summary .arw{transform:rotate(180deg)}
+.note p{margin:8px 0 0;font-size:11.5px;line-height:1.55;color:var(--muted);word-break:keep-all}
+.note p b{color:var(--ink3);font-weight:700}
+</style>
+</head>
+<body>
+
+<header class="topbar"><h1>한붓그리기</h1></header>
+
+<div class="toptools">
+  <button id="shareBtn" type="button" aria-label="링크 복사">링크 복사</button>
+</div>
+
+<p class="tagline">같은 선을 두 번 지나지 않고, 한 번에 모든 선을 이어 보세요.</p>
+
+<nav class="stages" id="stages" aria-label="단계 선택"></nav>
+
+<div class="pzgrid" id="pzgrid" aria-label="문제 선택"></div>
+
+<section class="card">
+  <div class="cardhead">
+    <span class="title" id="pzTitle">1-1 별 모양</span>
+    <span class="meta" id="pzMeta">점 5개 · 선 5개</span>
+  </div>
+  <canvas id="cv" aria-label="한붓그리기 판"></canvas>
+  <p class="guide" id="guide" aria-live="polite">출발할 점을 누르거나, 점에서 끌어 시작하세요.</p>
+  <p class="prog" id="prog">남은 선 5개</p>
+  <p class="hintmsg" id="hintMsg" hidden></p>
+  <div class="btns">
+    <button id="btnUndo" type="button">되돌리기</button>
+    <button id="btnReset" type="button">처음부터</button>
+    <button id="btnHint" type="button">힌트 보기</button>
+  </div>
+</section>
+
+<details class="note">
+  <summary>한붓그리기가 되는 조건 <span class="arw">▾</span></summary>
+  <p>선이 만나는 점을 <b>꼭짓점</b>이라고 해요. 꼭짓점에 모인 선의 개수가 홀수인 점을 <b>홀수점</b>이라고 하지요.</p>
+  <p>홀수점이 <b>0개</b>면 어느 점에서든 출발해 한 번에 다 그을 수 있어요. 홀수점이 <b>2개</b>면 반드시 그 <b>둘 중 한 점</b>에서 출발해야 하고, 다른 점에서 출발하면 끝까지 갈 수 없어요. 홀수점이 3개 이상이면 한붓그리기로는 완성할 수 없답니다.</p>
+</details>
+
+<script>
+var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"별 모양","points":[[50.0,12.0],[88.0,39.6],[73.5,84.4],[26.5,84.4],[12.0,39.6]],"edges":[[0,2],[2,4],[4,1],[1,3],[3,0]]},{"id":"1-2","stage":1,"no":2,"name":"집","points":[[20.0,84.0],[80.0,84.0],[80.0,48.0],[50.0,16.0],[20.0,48.0]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,0]]},{"id":"1-3","stage":1,"no":3,"name":"나비넥타이","points":[[50.0,50.0],[14.0,26.0],[14.0,74.0],[86.0,26.0],[86.0,74.0]],"edges":[[1,2],[2,0],[0,1],[3,4],[4,0],[0,3]]},{"id":"1-4","stage":1,"no":4,"name":"대각선 사각형","points":[[22.0,24.0],[78.0,24.0],[78.0,76.0],[22.0,76.0]],"edges":[[0,1],[1,2],[2,3],[3,0],[0,2]]},{"id":"1-5","stage":1,"no":5,"name":"모래시계","points":[[20.0,18.0],[80.0,18.0],[50.0,50.0],[20.0,82.0],[80.0,82.0]],"edges":[[0,1],[1,2],[2,0],[3,4],[4,2],[2,3]]},{"id":"2-1","stage":2,"no":1,"name":"이층집","points":[[26.0,16.0],[74.0,16.0],[74.0,50.0],[26.0,50.0],[26.0,84.0],[74.0,84.0]],"edges":[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,2]]},{"id":"2-2","stage":2,"no":2,"name":"육각형","points":[[90.0,50.0],[70.0,84.6],[30.0,84.6],[10.0,50.0],[30.0,15.4],[70.0,15.4]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[1,3]]},{"id":"2-3","stage":2,"no":3,"name":"왕관","points":[[14.0,84.0],[86.0,84.0],[86.0,30.0],[64.0,58.0],[50.0,20.0],[36.0,58.0],[14.0,30.0]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0]]},{"id":"2-4","stage":2,"no":4,"name":"우편 봉투","points":[[18.0,38.0],[82.0,38.0],[82.0,84.0],[18.0,84.0],[50.0,16.0]],"edges":[[0,1],[1,2],[2,3],[3,0],[0,4],[4,1],[0,2]]},{"id":"2-5","stage":2,"no":5,"name":"물고기","points":[[87.4,67.0],[58.0,84.0],[28.6,67.0],[28.6,33.0],[58.0,16.0],[87.4,33.0],[8.0,50.0]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[2,6],[6,3]]},{"id":"3-1","stage":3,"no":1,"name":"산","points":[[10.0,80.0],[50.0,80.0],[90.0,80.0],[33.0,42.0],[67.0,42.0],[50.0,10.0]],"edges":[[0,1],[1,2],[0,3],[3,1],[1,4],[4,2],[3,4],[3,5],[4,5]]},{"id":"3-2","stage":3,"no":2,"name":"삼각 격자","points":[[50.0,10.0],[10.0,82.0],[90.0,82.0],[30.0,46.0],[70.0,46.0],[50.0,82.0]],"edges":[[0,3],[3,1],[1,5],[5,2],[2,4],[4,0],[3,4],[4,5],[5,3]]},{"id":"3-3","stage":3,"no":3,"name":"잎사귀","points":[[14.0,50.0],[86.0,50.0],[36.0,20.0],[64.0,20.0],[36.0,50.0],[64.0,50.0],[36.0,80.0],[64.0,80.0]],"edges":[[0,2],[2,3],[3,1],[0,4],[4,5],[5,1],[0,6],[6,7],[7,1]]},{"id":"3-4","stage":3,"no":4,"name":"오각별","points":[[50.0,10.0],[89.9,39.0],[74.7,86.0],[25.3,86.0],[10.1,39.0]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,0],[0,2],[2,4],[4,1],[1,3],[3,0]]},{"id":"3-5","stage":3,"no":5,"name":"벌집","points":[[50.0,38.0],[29.2,26.0],[8.4,38.0],[8.4,62.0],[29.2,74.0],[50.0,62.0],[91.6,38.0],[70.8,26.0],[70.8,74.0],[91.6,62.0]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[6,7],[7,0],[5,8],[8,9],[9,6]]},{"id":"4-1","stage":4,"no":1,"name":"육각별","points":[[96.0,50.0],[72.9,63.2],[73.0,89.8],[50.0,76.5],[27.0,89.8],[27.1,63.2],[4.0,50.0],[27.1,36.8],[27.0,10.2],[50.0,23.5],[73.0,10.2],[72.9,36.7]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,0]]},{"id":"4-2","stage":4,"no":2,"name":"나비 두 마리","points":[[50.0,50.0],[20.0,35.0],[20.0,65.0],[80.0,35.0],[80.0,65.0],[35.0,20.0],[65.0,20.0],[35.0,80.0],[65.0,80.0]],"edges":[[0,1],[1,2],[2,0],[0,3],[3,4],[4,0],[0,5],[5,6],[6,0],[0,7],[7,8],[8,0]]},{"id":"4-3","stage":4,"no":3,"name":"팔각형","points":[[50.0,8.0],[79.7,20.3],[92.0,50.0],[79.7,79.7],[50.0,92.0],[20.3,79.7],[8.0,50.0],[20.3,20.3]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0],[0,2],[2,4],[4,6],[6,0]]},{"id":"4-4","stage":4,"no":4,"name":"긴 잎사귀","points":[[12.0,50.0],[88.0,50.0],[30.0,22.0],[50.0,14.0],[70.0,22.0],[30.0,50.0],[50.0,50.0],[70.0,50.0],[30.0,78.0],[50.0,86.0],[70.0,78.0]],"edges":[[0,2],[2,3],[3,4],[4,1],[0,5],[5,6],[6,7],[7,1],[0,8],[8,9],[9,10],[10,1]]},{"id":"4-5","stage":4,"no":5,"name":"계단 세 칸","points":[[10.0,82.0],[34.0,82.0],[34.0,58.0],[10.0,58.0],[58.0,58.0],[58.0,34.0],[34.0,34.0],[82.0,34.0],[82.0,10.0],[58.0,10.0]],"edges":[[0,1],[1,2],[2,3],[3,0],[2,4],[4,5],[5,6],[6,2],[5,7],[7,8],[8,9],[9,5]]},{"id":"5-1","stage":5,"no":1,"name":"바람개비","points":[[50.0,50.0],[74.2,64.0],[64.0,74.2],[36.0,74.2],[25.8,64.0],[25.8,36.0],[36.0,25.8],[64.0,25.8],[74.2,36.0],[92.0,50.0],[50.0,92.0],[8.0,50.0],[50.0,8.0]],"edges":[[0,8],[8,9],[9,1],[1,0],[0,2],[2,10],[10,3],[3,0],[0,4],[4,11],[11,5],[5,0],[0,6],[6,12],[12,7],[7,0]]},{"id":"5-2","stage":5,"no":2,"name":"여덟 별","points":[[96.0,50.0],[81.4,63.0],[82.5,82.5],[63.0,81.4],[50.0,96.0],[37.0,81.4],[17.5,82.5],[18.6,63.0],[4.0,50.0],[18.6,37.0],[17.5,17.5],[37.0,18.6],[50.0,4.0],[63.0,18.6],[82.5,17.5],[81.4,37.0]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,12],[12,13],[13,14],[14,15],[15,0]]},{"id":"5-3","stage":5,"no":3,"name":"삼각 격자 큰 것","points":[[50.0,8.0],[36.0,32.2],[64.0,32.2],[22.0,56.5],[50.0,56.5],[78.0,56.5],[8.0,80.8],[36.0,80.8],[64.0,80.8],[92.0,80.8]],"edges":[[0,1],[0,2],[1,3],[1,4],[2,4],[2,5],[3,6],[3,7],[4,7],[4,8],[5,8],[5,9],[1,2],[3,4],[4,5],[6,7],[7,8],[8,9]]},{"id":"5-4","stage":5,"no":4,"name":"눈꽃","points":[[70.0,50.0],[60.0,67.3],[40.0,67.3],[30.0,50.0],[40.0,32.7],[60.0,32.7],[84.6,70.0],[50.0,90.0],[15.4,70.0],[15.4,30.0],[50.0,10.0],[84.6,30.0]],"edges":[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[0,6],[1,6],[1,7],[2,7],[2,8],[3,8],[3,9],[4,9],[4,10],[5,10],[5,11],[0,11]]},{"id":"5-5","stage":5,"no":5,"name":"네모 사슬","points":[[10.0,86.0],[30.0,86.0],[30.0,66.0],[10.0,66.0],[50.0,66.0],[50.0,46.0],[30.0,46.0],[10.0,46.0],[10.0,26.0],[30.0,26.0],[50.0,26.0],[50.0,6.0],[30.0,6.0]],"edges":[[0,1],[1,2],[2,3],[3,0],[2,4],[4,5],[5,6],[6,2],[6,7],[7,8],[8,9],[9,6],[9,10],[10,11],[11,12],[12,9]]}];
+
+(function () {
+  'use strict';
+
+  var STAGES = [
+    { n: 1, name: '1단계', sub: '입문' },
+    { n: 2, name: '2단계', sub: '초급' },
+    { n: 3, name: '3단계', sub: '중급' },
+    { n: 4, name: '4단계', sub: '도전' },
+    { n: 5, name: '5단계', sub: '고수' }
+  ];
+  var DONE_KEY = 'onestroke.done.v1';
+  var SNAP = 8.2;          /* board units: touch radius around a point */
+  var TAU = Math.PI * 2;
+  var raf = window.requestAnimationFrame || function (fn) { return setTimeout(function () { fn(Date.now()); }, 60); };
+
+  var cv = null, ctx = null;
+  var view = { size: 0, dpr: 1 };
+  var st = {
+    stage: 1, no: 1, path: [], used: {}, hint: null, complete: false,
+    dragging: false, pid: null, ptr: null, dash: 0, flash: -1
+  };
+  var kept = {};            /* id -> {path, used} while switching puzzles */
+  var doneMap = loadDone();
+  var hintTimer = null, flashTimer = null;
+
+  function $(id) { return document.getElementById(id); }
+  function key(a, b) { return a < b ? a + '-' + b : b + '-' + a; }
+
+  function byId(id) {
+    for (var i = 0; i < PUZZLES.length; i++) { if (PUZZLES[i].id === id) { return PUZZLES[i]; } }
+    return null;
+  }
+  function puzzlesOf(stage) {
+    var out = [];
+    for (var i = 0; i < PUZZLES.length; i++) { if (PUZZLES[i].stage === stage) { out.push(PUZZLES[i]); } }
+    return out;
+  }
+  function cur() {
+    var list = puzzlesOf(st.stage);
+    for (var i = 0; i < list.length; i++) { if (list[i].no === st.no) { return prep(list[i]); } }
+    return list.length ? prep(list[0]) : null;
+  }
+
+  /* ------------------------------------------------------------ data prep */
+  function prep(pz) {
+    if (pz._ready) { return pz; }
+    pz._adj = [];
+    pz._set = {};
+    pz._deg = [];
+    var i;
+    for (i = 0; i < pz.points.length; i++) { pz._adj.push([]); pz._deg.push(0); }
+    for (i = 0; i < pz.edges.length; i++) {
+      var a = pz.edges[i][0], b = pz.edges[i][1], k = key(a, b);
+      pz._set[k] = true;
+      pz._adj[a].push({ v: b, k: k });
+      pz._adj[b].push({ v: a, k: k });
+      pz._deg[a] += 1;
+      pz._deg[b] += 1;
+    }
+    pz._ready = true;
+    return pz;
+  }
+
+  function usedCount() {
+    var n = 0, k;
+    for (k in st.used) { if (st.used.hasOwnProperty(k)) { n += 1; } }
+    return n;
+  }
+
+  /* ------------------------------------------------------ euler machinery */
+  function remainingDegrees(pz, used, degOut) {
+    var i, odd = [];
+    for (i = 0; i < pz.points.length; i++) { degOut[i] = 0; }
+    for (i = 0; i < pz.edges.length; i++) {
+      var e = pz.edges[i];
+      if (used[key(e[0], e[1])]) { continue; }
+      degOut[e[0]] += 1;
+      degOut[e[1]] += 1;
+    }
+    for (i = 0; i < degOut.length; i++) { if (degOut[i] % 2 === 1) { odd.push(i); } }
+    return odd;
+  }
+
+  /* steps: [{from,to}] of an Euler trail over the remaining edges starting at
+     `start`, or null when the remaining graph can not be finished from there. */
+  function eulerSteps(pz, used, start) {
+    var deg = [], odd = remainingDegrees(pz, used, deg);
+    var rem = 0, i;
+    for (i = 0; i < deg.length; i++) { rem += deg[i]; }
+    rem = rem / 2;
+    if (rem === 0) { return []; }
+    if (deg[start] === 0) { return null; }
+    if (odd.length === 0) {
+      /* an Euler circuit starts anywhere in the component */
+    } else if (odd.length === 2) {
+      if (odd[0] !== start && odd[1] !== start) { return null; }
+    } else {
+      return null;
+    }
+    var adj = [], j;
+    for (i = 0; i < pz.points.length; i++) { adj.push([]); }
+    for (i = 0; i < pz.edges.length; i++) {
+      var e = pz.edges[i];
+      if (used[key(e[0], e[1])]) { continue; }
+      adj[e[0]].push({ v: e[1], i: i });
+      adj[e[1]].push({ v: e[0], i: i });
+    }
+    var cursor = [], taken = {}, stack = [start], out = [];
+    for (i = 0; i < pz.points.length; i++) { cursor.push(0); }
+    while (stack.length) {
+      var u = stack[stack.length - 1];
+      var moved = false;
+      while (cursor[u] < adj[u].length) {
+        var cand = adj[u][cursor[u]];
+        cursor[u] += 1;
+        if (taken[cand.i]) { continue; }
+        taken[cand.i] = 1;
+        stack.push(cand.v);
+        moved = true;
+        break;
+      }
+      if (!moved) { out.push(stack.pop()); }
+    }
+    if (out.length !== rem + 1) { return null; }   /* graph not connected */
+    out.reverse();
+    var steps = [];
+    for (j = 0; j + 1 < out.length; j++) { steps.push({ from: out[j], to: out[j + 1] }); }
+    return steps;
+  }
+
+  function firstStart(pz, used) {
+    var deg = [], odd = remainingDegrees(pz, used, deg);
+    if (odd.length === 2) { return odd[0]; }
+    for (var i = 0; i < deg.length; i++) { if (deg[i] > 0) { return i; } }
+    return -1;
+  }
+
+  function computeHint(pz, used, path) {
+    var total = pz.edges.length;
+    if (usedCount() >= total) { return { kind: 'done' }; }
+    if (!path.length) {
+      var s = firstStart(pz, used);
+      if (s < 0) { return { kind: 'stuck' }; }
+      var all = eulerSteps(pz, used, s);
+      if (!all) { return { kind: 'stuck' }; }
+      return { kind: 'start', start: s, steps: all.slice(0, 2) };
+    }
+    var from = path[path.length - 1];
+    var next = eulerSteps(pz, used, from);
+    if (!next) { return { kind: 'stuck', start: from, steps: [] }; }
+    return { kind: 'next', start: from, steps: next.slice(0, 2) };
+  }
+
+  /* ------------------------------------------------------------- rendering */
+  function sx(u) { return u / 100 * view.size; }
+
+  function fitCanvas() {
+    if (!cv) { return; }
+    var rect = cv.getBoundingClientRect();
+    var size = Math.round(rect.width || 0);
+    if (!size) { size = Math.round(Math.min(window.innerWidth - 24, 420)); }
+    var dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    if (cv.width !== Math.round(size * dpr) || cv.height !== Math.round(size * dpr)) {
+      cv.width = Math.round(size * dpr);
+      cv.height = Math.round(size * dpr);
+    }
+    view.size = size;
+    view.dpr = dpr;
+  }
+
+  function render() {
+    if (!ctx || !view.size) { return; }
+    var S = view.size;
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    ctx.clearRect(0, 0, S, S);
+    ctx.fillStyle = '#FBFBFC';
+    ctx.fillRect(0, 0, S, S);
+
+    /* note grid */
+    var cells = 16, g = S / cells, i;
+    ctx.strokeStyle = '#ECEEF2';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (i = 1; i < cells; i++) {
+      var p = Math.round(i * g) + 0.5;
+      ctx.moveTo(p, 0); ctx.lineTo(p, S);
+      ctx.moveTo(0, p); ctx.lineTo(S, p);
+    }
+    ctx.stroke();
+
+    var pz = cur();
+    if (!pz) { return; }
+    var pts = pz.points, k, e;
+
+    /* edges: faint first, then drawn edges on top */
+    var passes = [false, true];
+    for (var pass = 0; pass < 2; pass++) {
+      var wantDrawn = passes[pass];
+      ctx.lineCap = 'round';
+      ctx.lineWidth = wantDrawn ? Math.max(4, S * 0.015) : Math.max(3.2, S * 0.012);
+      for (k = 0; k < pz.edges.length; k++) {
+        e = pz.edges[k];
+        if (!!st.used[key(e[0], e[1])] !== wantDrawn) { continue; }
+        ctx.strokeStyle = wantDrawn ? '#1F2937' : '#CBD5E1';
+        ctx.beginPath();
+        ctx.moveTo(sx(pts[e[0]][0]), sx(pts[e[0]][1]));
+        ctx.lineTo(sx(pts[e[1]][0]), sx(pts[e[1]][1]));
+        ctx.stroke();
+      }
+    }
+
+    if (st.hint) { drawHint(pz); }
+
+    /* live preview from the current point to the finger */
+    if (st.dragging && st.ptr && st.path.length) {
+      var lastIdx = st.path[st.path.length - 1];
+      ctx.strokeStyle = 'rgba(107,114,128,0.85)';
+      ctx.lineWidth = Math.max(3, S * 0.011);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(sx(pts[lastIdx][0]), sx(pts[lastIdx][1]));
+      ctx.lineTo(sx(st.ptr.x), sx(st.ptr.y));
+      ctx.stroke();
+    }
+
+    /* points */
+    var pr = Math.max(6.5, S * 0.028);
+    for (i = 0; i < pts.length; i++) {
+      var cxp = sx(pts[i][0]), cyp = sx(pts[i][1]);
+      ctx.beginPath();
+      ctx.arc(cxp, cyp, pr, 0, TAU);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      ctx.lineWidth = Math.max(2.2, S * 0.0075);
+      ctx.strokeStyle = '#1F2937';
+      ctx.stroke();
+    }
+
+    /* flashes + current point */
+    if (st.flash >= 0 && st.flash < pts.length) {
+      ctx.beginPath();
+      ctx.arc(sx(pts[st.flash][0]), sx(pts[st.flash][1]), pr * 1.75, 0, TAU);
+      ctx.strokeStyle = '#6B7280';
+      ctx.lineWidth = Math.max(2, S * 0.007);
+      ctx.stroke();
+    }
+    if (st.path.length) {
+      var cIdx = st.path[st.path.length - 1];
+      ctx.beginPath();
+      ctx.arc(sx(pts[cIdx][0]), sx(pts[cIdx][1]), pr * 1.85, 0, TAU);
+      ctx.strokeStyle = '#9CA3AF';
+      ctx.lineWidth = Math.max(2.4, S * 0.008);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(sx(pts[cIdx][0]), sx(pts[cIdx][1]), pr * 0.34, 0, TAU);
+      ctx.fillStyle = '#1F2937';
+      ctx.fill();
+    }
+  }
+
+  function drawHint(pz) {
+    var h = st.hint, pts = pz.points, S = view.size;
+    if (h.start >= 0 && h.start < pts.length) {
+      var pulse = 1 + 0.14 * Math.sin(st.dash / 9);
+      ctx.beginPath();
+      ctx.arc(sx(pts[h.start][0]), sx(pts[h.start][1]), Math.max(6.5, S * 0.028) * 2.25 * pulse, 0, TAU);
+      ctx.strokeStyle = '#4B5563';
+      ctx.lineWidth = Math.max(2, S * 0.006);
+      ctx.stroke();
+    }
+    if (!h.steps || !h.steps.length) { return; }
+    ctx.save();
+    ctx.setLineDash([Math.max(6, S * 0.018), Math.max(5, S * 0.014)]);
+    ctx.lineDashOffset = -st.dash;
+    ctx.lineCap = 'butt';
+    ctx.lineWidth = Math.max(2.6, S * 0.01);
+    ctx.strokeStyle = '#6B7280';
+    for (var i = 0; i < h.steps.length; i++) {
+      var a = pts[h.steps[i].from], b = pts[h.steps[i].to];
+      ctx.beginPath();
+      ctx.moveTo(sx(a[0]), sx(a[1]));
+      ctx.lineTo(sx(b[0]), sx(b[1]));
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    /* arrow head at the end of the last hint edge */
+    var lastStep = h.steps[h.steps.length - 1];
+    var pa = pts[lastStep.from], pb = pts[lastStep.to];
+    var ax = sx(pb[0]), ay = sx(pb[1]);
+    var bx = sx(pa[0]), by = sx(pa[1]);
+    var dx = ax - bx, dy = ay - by, len = Math.sqrt(dx * dx + dy * dy) || 1;
+    dx /= len; dy /= len;
+    var tipBack = Math.max(12, S * 0.05);
+    var tx = ax - dx * tipBack, ty = ay - dy * tipBack;
+    var wing = Math.max(5, S * 0.02);
+    ctx.beginPath();
+    ctx.moveTo(tx + dx * wing * 1.5, ty + dy * wing * 1.5);
+    ctx.lineTo(tx - dy * wing, ty + dx * wing);
+    ctx.lineTo(tx + dy * wing, ty - dx * wing);
+    ctx.closePath();
+    ctx.fillStyle = '#4B5563';
+    ctx.fill();
+  }
+
+  function animTick() {
+    if (!st.hint) { return; }
+    st.dash = (st.dash + 1) % 26;
+    render();
+    if (!window.__noRAF) { raf(animTick); }
+  }
+  function startAnim() {
+    if (!st.hint) { return; }
+    st.dash = 0;
+    animTick();
+  }
+
+  /* ------------------------------------------------------------ interaction */
+  function hitPoint(pz, x, y) {
+    var best = -1, bd = SNAP, i, dx, dy, d;
+    for (i = 0; i < pz.points.length; i++) {
+      dx = pz.points[i][0] - x;
+      dy = pz.points[i][1] - y;
+      d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= bd) { bd = d; best = i; }
+    }
+    return best;
+  }
+
+  function unitFrom(ev) {
+    var rect = cv.getBoundingClientRect();
+    var w = rect.width || view.size || 1;
+    var h = rect.height || w;
+    return { x: (ev.clientX - rect.left) / w * 100, y: (ev.clientY - rect.top) / h * 100 };
+  }
+
+  function tryDraw(a, b) {
+    var pz = cur();
+    if (!pz) { return false; }
+    var k = key(a, b);
+    if (!pz._set[k] || st.used[k] || a === b) { return false; }
+    st.used[k] = true;
+    st.path.push(b);
+    st.hint = null;
+    if (usedCount() >= pz.edges.length) { finish(); }
+    render();
+    updateText();
+    return true;
+  }
+
+  function finish() {
+    st.complete = true;
+    doneMap[cur().id] = 1;
+    saveDone();
+  }
+
+  function tapIndex(i) {
+    var pz = cur();
+    if (!pz || st.complete) { return false; }
+    var ok = false;
+    if (!st.path.length) {
+      st.path = [i];
+      st.hint = null;
+      ok = true;
+    } else {
+      var last = st.path[st.path.length - 1];
+      if (i !== last) { ok = tryDraw(last, i); }
+    }
+    if (!ok && i !== (st.path.length ? st.path[st.path.length - 1] : -1)) {
+      flashPoint(i);
+    }
+    render();
+    updateText();
+    return ok;
+  }
+
+  function flashPoint(i) {
+    st.flash = i;
+    if (flashTimer) { clearTimeout(flashTimer); }
+    flashTimer = setTimeout(function () { st.flash = -1; render(); }, 520);
+  }
+
+  function onDown(ev) {
+    if (ev.cancelable) { ev.preventDefault(); }
+    var pz = cur();
+    if (!pz) { return; }
+    if (cv.setPointerCapture) { try { cv.setPointerCapture(ev.pointerId); } catch (e) {} }
+    st.dragging = true;
+    st.pid = ev.pointerId;
+    var u = unitFrom(ev);
+    st.ptr = u;
+    var i = hitPoint(pz, u.x, u.y);
+    if (i >= 0) {
+      tapIndex(i);
+    } else if (st.hint) {
+      st.hint = null;
+      render();
+      updateText();
+    }
+    render();
+    updateText();
+  }
+
+  function onMove(ev) {
+    if (!st.dragging || ev.pointerId !== st.pid) { return; }
+    if (ev.cancelable) { ev.preventDefault(); }
+    var pz = cur();
+    if (!pz) { return; }
+    var u = unitFrom(ev);
+    st.ptr = u;
+    if (st.path.length) {
+      var last = st.path[st.path.length - 1];
+      var i = hitPoint(pz, u.x, u.y);
+      if (i >= 0 && i !== last) { tryDraw(last, i); }
+    }
+    render();
+  }
+
+  function onUp(ev) {
+    if (ev.pointerId !== st.pid) { return; }
+    st.dragging = false;
+    st.pid = null;
+    st.ptr = null;
+    render();
+  }
+
+  /* --------------------------------------------------------------- actions */
+  function undo() {
+    var pz = cur();
+    if (!pz) { return false; }
+    if (st.path.length > 1) {
+      var b = st.path.pop();
+      var a = st.path[st.path.length - 1];
+      delete st.used[key(a, b)];
+      st.complete = false;
+      st.hint = null;
+      render(); updateText();
+      return true;
+    }
+    if (st.path.length === 1) {
+      st.path = [];
+      st.complete = false;
+      st.hint = null;
+      render(); updateText();
+      return true;
+    }
+    return false;
+  }
+
+  function resetPuzzle() {
+    st.path = [];
+    st.used = {};
+    st.hint = null;
+    st.complete = false;
+    st.dragging = false;
+    st.ptr = null;
+    st.flash = -1;
+    kept[cur().id] = null;
+    render(); updateText();
+  }
+
+  function showHint() {
+    var pz = cur();
+    if (!pz) { return null; }
+    st.hint = computeHint(pz, st.used, st.path);
+    render(); updateText();
+    startAnim();
+    return st.hint;
+  }
+
+  /* ------------------------------------------------------------- text / ui */
+  function movesLeft(pz) {
+    if (!st.path.length) { return pz.edges.length > 0; }
+    var last = st.path[st.path.length - 1], adj = pz._adj[last], i;
+    for (i = 0; i < adj.length; i++) { if (!st.used[adj[i].k]) { return true; } }
+    return false;
+  }
+
+  function updateText() {
+    var pz = cur();
+    if (!pz) { return; }
+    var total = pz.edges.length, left = total - usedCount();
+
+    $('pzTitle').textContent = pz.id + ' ' + pz.name;
+    $('pzMeta').textContent = '점 ' + pz.points.length + '개 · 선 ' + total + '개';
+
+    var guide;
+    if (st.complete) {
+      guide = '완성! 모든 선을 한 번에 이었어요.';
+    } else if (!st.path.length) {
+      guide = '출발할 점을 누르거나, 점에서 끌어 시작하세요.';
+    } else if (!movesLeft(pz)) {
+      guide = '이 점에서 그을 선이 없어요. 되돌리기를 눌러 보세요.';
+    } else {
+      guide = '다음 점을 누르거나, 끌어서 이어 그리세요.';
+    }
+    $('guide').textContent = guide;
+    $('prog').textContent = st.complete ? '남은 선 0개 · 모두 이었어요' : '남은 선 ' + left + '개';
+
+    var msg = $('hintMsg');
+    var h = st.hint;
+    if (!h) {
+      msg.hidden = true;
+      msg.textContent = '';
+    } else if (h.kind === 'done') {
+      msg.hidden = false;
+      msg.textContent = '이미 모든 선을 다 이었어요.';
+    } else if (h.kind === 'stuck') {
+      msg.hidden = false;
+      msg.textContent = "지금 길은 끝까지 갈 수 없어요! '되돌리기'로 한두 칸 돌아가 보세요.";
+    } else if (h.kind === 'start') {
+      msg.hidden = false;
+      msg.textContent = '이 점에서 출발해 점선 방향으로 이어 보세요.';
+    } else {
+      msg.hidden = false;
+      msg.textContent = '점선 방향으로 이어 가면 끝까지 그을 수 있어요.';
+    }
+
+    var undoBtn = $('btnUndo');
+    undoBtn.disabled = st.path.length === 0;
+
+    var stageBtns = $('stages').getElementsByTagName('button'), i;
+    for (i = 0; i < stageBtns.length; i++) {
+      if (Number(stageBtns[i].getAttribute('data-stage')) === st.stage) {
+        stageBtns[i].className = 'stage on';
+      } else {
+        stageBtns[i].className = 'stage';
+      }
+    }
+    var pzBtns = $('pzgrid').getElementsByTagName('button');
+    for (i = 0; i < pzBtns.length; i++) {
+      var no = Number(pzBtns[i].getAttribute('data-no'));
+      var p = byId(st.stage + '-' + no);
+      var cls = 'pz';
+      if (no === st.no) { cls += ' on'; }
+      if (p && doneMap[p.id]) { cls += ' done'; }
+      pzBtns[i].className = cls;
+    }
+  }
+
+  function buildStages() {
+    var box = $('stages');
+    box.innerHTML = '';
+    for (var i = 0; i < STAGES.length; i++) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'stage' + (STAGES[i].n === st.stage ? ' on' : '');
+      b.setAttribute('data-stage', String(STAGES[i].n));
+      b.setAttribute('aria-label', STAGES[i].name + ' ' + STAGES[i].sub);
+      b.innerHTML = '<b>' + STAGES[i].name + '</b><span>' + STAGES[i].sub + '</span>';
+      b.onclick = (function (n) { return function () { selectStage(n); }; })(STAGES[i].n);
+      box.appendChild(b);
+    }
+  }
+
+  function buildGrid() {
+    var box = $('pzgrid');
+    box.innerHTML = '';
+    var list = puzzlesOf(st.stage);
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-no', String(p.no));
+      b.className = 'pz' + (p.no === st.no ? ' on' : '') + (doneMap[p.id] ? ' done' : '');
+      b.setAttribute('aria-label', p.id + ' ' + p.name);
+      b.innerHTML = '<span class="n">' + p.no + '</span><span class="nm">' + p.name + '</span><span class="tk">✓</span>';
+      b.onclick = (function (no) { return function () { selectPuzzle(st.stage, no); }; })(p.no);
+      box.appendChild(b);
+    }
+  }
+
+  function stashCurrent() {
+    var pz = cur();
+    if (!pz) { return; }
+    if (st.path.length) {
+      kept[pz.id] = { path: st.path.slice(0), used: copyUsed() };
+    } else {
+      kept[pz.id] = null;
+    }
+  }
+  function copyUsed() {
+    var out = {}, k;
+    for (k in st.used) { if (st.used.hasOwnProperty(k)) { out[k] = 1; } }
+    return out;
+  }
+
+  function loadState(id) {
+    st.path = [];
+    st.used = {};
+    st.complete = false;
+    st.hint = null;
+    st.dragging = false;
+    st.ptr = null;
+    st.flash = -1;
+    var keep = kept[id];
+    if (keep) {
+      st.path = keep.path.slice(0);
+      st.used = {};
+      for (var k in keep.used) { if (keep.used.hasOwnProperty(k)) { st.used[k] = 1; } }
+      var pz = byId(id);
+      st.complete = !!(pz && usedCount() >= pz.edges.length);
+    }
+  }
+
+  function selectStage(n) {
+    stashCurrent();
+    st.stage = n;
+    var list = puzzlesOf(n);
+    var no = list.length ? list[0].no : 1;
+    for (var i = 0; i < list.length; i++) { if (list[i].no === st.no) { no = st.no; } }
+    st.no = no;
+    loadState(st.stage + '-' + st.no);
+    buildGrid();
+    updateText();
+    render();
+  }
+
+  function selectPuzzle(stage, no) {
+    stashCurrent();
+    st.stage = stage;
+    st.no = no;
+    loadState(stage + '-' + no);
+    buildGrid();
+    updateText();
+    render();
+  }
+
+  /* --------------------------------------------------------------- storage */
+  function loadDone() {
+    try {
+      var raw = window.localStorage.getItem(DONE_KEY);
+      if (!raw) { return {}; }
+      var o = JSON.parse(raw);
+      if (!o || typeof o !== 'object') { return {}; }
+      return o;
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveDone() {
+    try { window.localStorage.setItem(DONE_KEY, JSON.stringify(doneMap)); } catch (e) {}
+  }
+
+  /* ------------------------------------------------------------------ init */
+  function init() {
+    cv = $('cv');
+    if (cv && cv.getContext) { ctx = cv.getContext('2d'); }
+    for (var i = 0; i < PUZZLES.length; i++) { prep(PUZZLES[i]); }
+
+    buildStages();
+    buildGrid();
+
+    if (cv) {
+      if (window.PointerEvent) {
+        cv.addEventListener('pointerdown', onDown, false);
+        cv.addEventListener('pointermove', onMove, false);
+        cv.addEventListener('pointerup', onUp, false);
+        cv.addEventListener('pointercancel', onUp, false);
+        cv.addEventListener('pointerleave', onUp, false);
+      } else {
+        cv.addEventListener('touchstart', function (ev) {
+          var t = ev.changedTouches[0];
+          onDown({ pointerId: 1, clientX: t.clientX, clientY: t.clientY, cancelable: true, preventDefault: function () {} });
+        }, false);
+        cv.addEventListener('touchmove', function (ev) {
+          ev.preventDefault();
+          var t = ev.changedTouches[0];
+          onMove({ pointerId: 1, clientX: t.clientX, clientY: t.clientY, cancelable: true, preventDefault: function () {} });
+        }, false);
+        cv.addEventListener('touchend', function () { onUp({ pointerId: 1 }); }, false);
+      }
+    }
+
+    $('btnUndo').onclick = function () { undo(); };
+    $('btnReset').onclick = function () { resetPuzzle(); };
+    $('btnHint').onclick = function () { showHint(); };
+    $('shareBtn').onclick = function () {
+      var url = window.location.href;
+      var done = function () {
+        var b = $('shareBtn');
+        b.textContent = '복사했어요';
+        setTimeout(function () { b.textContent = '링크 복사'; }, 1400);
+      };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done, function () {});
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = url;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('resize', function () {
+      fitCanvas();
+      render();
+    });
+    window.addEventListener('orientationchange', function () {
+      setTimeout(function () { fitCanvas(); render(); }, 120);
+    });
+
+    fitCanvas();
+    updateText();
+    render();
+  }
+
+  /* -------------------------------------------------------------- test api */
+  window.__oneStroke = {
+    puzzles: function () { return PUZZLES; },
+    state: function () { return st; },
+    current: cur,
+    select: function (stage, no) { selectPuzzle(stage, no); },
+    tapPoint: tapIndex,
+    tapUnit: function (x, y) {
+      var pz = cur();
+      var i = hitPoint(pz, x, y);
+      return i >= 0 ? tapIndex(i) : -1;
+    },
+    dragStartPoint: function (i) {
+      var pz = cur();
+      st.dragging = true;
+      st.pid = 1;
+      st.ptr = { x: pz.points[i][0], y: pz.points[i][1] };
+      if (!st.path.length) { st.path = [i]; st.hint = null; render(); updateText(); return true; }
+      var last = st.path[st.path.length - 1];
+      if (last !== i) { return tryDraw(last, i); }
+      return false;
+    },
+    dragToPoint: function (i) {
+      var pz = cur();
+      st.ptr = { x: pz.points[i][0], y: pz.points[i][1] };
+      if (!st.path.length) { return false; }
+      var last = st.path[st.path.length - 1];
+      var out = (i !== last) && tryDraw(last, i);
+      render();
+      return out;
+    },
+    dragEnd: function () { st.dragging = false; st.pid = null; st.ptr = null; render(); },
+    undo: undo,
+    reset: resetPuzzle,
+    hint: showHint,
+    hintFor: function (id, used, path) { return computeHint(byId(id), used || {}, path || []); },
+    eulerFor: function (id, used, start) { return eulerSteps(byId(id), used || {}, start); },
+    usedCount: usedCount,
+    isComplete: function () { return st.complete; },
+    doneMap: function () { return doneMap; },
+    render: function () { fitCanvas(); render(); },
+    edgeKey: key,
+    remaining: function () {
+      var pz = cur(), out = [], i;
+      for (i = 0; i < pz.edges.length; i++) {
+        if (!st.used[key(pz.edges[i][0], pz.edges[i][1])]) { out.push(pz.edges[i]); }
+      }
+      return out;
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, false);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
