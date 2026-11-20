@@ -309,7 +309,6 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"나비","points":[[50.0,57.9
     { n: 4, name: '4단계', sub: '도전' },
     { n: 5, name: '5단계', sub: '고수' }
   ];
-  var DONE_KEY = 'onestroke.done.v1';
   var ADVANCE_MS = 500;    /* how long '완성!' stays before the next problem */
   var SNAP = 8.2;          /* board units: touch radius around a point */
   var TAU = Math.PI * 2;
@@ -321,8 +320,9 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"나비","points":[[50.0,57.9
     stage: 1, no: 1, path: [], used: {}, hint: null, complete: false,
     dragging: false, pid: null, ptr: null, dash: 0, flash: -1
   };
-  var kept = {};            /* id -> {path, used} while switching puzzles */
-  var doneMap = loadDone();
+  /* Shared tablet: nothing is kept between puzzles, nothing is stored on the
+     device. doneMap only marks ✓ on the current screen and is gone on reload. */
+  var doneMap = {};
   var hintTimer = null, flashTimer = null;
   var advanceTimer = null;   /* pending automatic move to the next problem */
 
@@ -654,7 +654,6 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"나비","points":[[50.0,57.9
   function finish() {
     st.complete = true;
     doneMap[cur().id] = 1;
-    saveDone();
     scheduleAdvance();
   }
 
@@ -796,7 +795,6 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"나비","points":[[50.0,57.9
     st.dragging = false;
     st.ptr = null;
     st.flash = -1;
-    kept[cur().id] = null;
     render(); updateText();
   }
 
@@ -911,53 +909,24 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"나비","points":[[50.0,57.9
     }
   }
 
-  function stashCurrent() {
-    var pz = cur();
-    if (!pz) { return; }
-    if (st.path.length) {
-      kept[pz.id] = { path: st.path.slice(0), used: copyUsed() };
-    } else {
-      kept[pz.id] = null;
-    }
-  }
-  function copyUsed() {
-    var out = {}, k;
-    for (k in st.used) { if (st.used.hasOwnProperty(k)) { out[k] = 1; } }
-    return out;
-  }
-
-  function loadState(id) {
+  /* Shared tablet: every move to a problem (puzzle tap, stage tab, replaying a
+     problem already solved) opens a clean, empty board. */
+  function clearBoard() {
     st.path = [];
     st.used = {};
     st.complete = false;
     st.hint = null;
     st.dragging = false;
+    st.pid = null;
     st.ptr = null;
     st.flash = -1;
-    var keep = kept[id];
-    if (keep) {
-      st.path = keep.path.slice(0);
-      st.used = {};
-      for (var k in keep.used) { if (keep.used.hasOwnProperty(k)) { st.used[k] = 1; } }
-      var pz = byId(id);
-      st.complete = !!(pz && usedCount() >= pz.edges.length);
-    }
-  }
-
-  function firstOpen(stage) {
-    var list = puzzlesOf(stage), i;
-    for (i = 0; i < list.length; i++) {
-      if (!doneMap[list[i].id]) { return list[i].no; }
-    }
-    return list.length ? list[0].no : 1;
   }
 
   function selectStage(n) {
     cancelAdvance();
-    stashCurrent();
     st.stage = n;
-    st.no = firstOpen(n);
-    loadState(st.stage + '-' + st.no);
+    st.no = 1;                 /* a stage always opens on its first problem */
+    clearBoard();
     buildGrid();
     updateText();
     render();
@@ -965,29 +934,12 @@ var PUZZLES = [{"id":"1-1","stage":1,"no":1,"name":"나비","points":[[50.0,57.9
 
   function selectPuzzle(stage, no) {
     cancelAdvance();
-    stashCurrent();
     st.stage = stage;
     st.no = no;
-    loadState(stage + '-' + no);
+    clearBoard();
     buildGrid();
     updateText();
     render();
-  }
-
-  /* --------------------------------------------------------------- storage */
-  function loadDone() {
-    try {
-      var raw = window.localStorage.getItem(DONE_KEY);
-      if (!raw) { return {}; }
-      var o = JSON.parse(raw);
-      if (!o || typeof o !== 'object') { return {}; }
-      return o;
-    } catch (e) {
-      return {};
-    }
-  }
-  function saveDone() {
-    try { window.localStorage.setItem(DONE_KEY, JSON.stringify(doneMap)); } catch (e) {}
   }
 
   /* ------------------------------------------------------------------ init */
