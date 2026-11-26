@@ -58,9 +58,11 @@ header.topbar h1{
   display:flex;
   align-items:center;
   justify-content:flex-end;
-  height:30px;
+  height:38px;
   padding:0 12px;
 }
+/* 🏠 다른 게임은 기록·링크 복사와 같은 줄의 맨 왼쪽에 붙인다 */
+.toptools .homebtn{margin-right:auto}
 .toptools button{
   border:0;
   background:transparent;
@@ -304,6 +306,17 @@ header.topbar h1{
   -webkit-tap-highlight-color:transparent;white-space:nowrap;
 }
 .homebtn:active{transform:translateY(1px)}
+/* 🏆 기록 버튼: 작고 흐려서 잘 안 보인다는 요청으로 금색 네모 버튼으로 키웠다 */
+.toptools .recbtn{
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  height:34px;padding:0 13px;border-radius:11px;
+  background:linear-gradient(180deg,#FFE082 0%,#F7A928 100%);
+  border:1.6px solid #DB8608;color:#4E2C00;
+  font-family:inherit;font-size:13.5px;font-weight:900;letter-spacing:-.02em;line-height:1;
+  box-shadow:0 2px 0 #C97A00,0 5px 12px rgba(201,122,0,.24);
+  white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.toptools .recbtn:active{transform:translateY(1px);box-shadow:0 1px 0 #C97A00}
 /* ==== /RECORD PANEL ==== */
 </style>
 </head>
@@ -313,8 +326,8 @@ header.topbar h1{
 
 <div class="toptools">
   <a class="homebtn" href="https://chohanui2-home.github.io/games/" aria-label="다른 게임 고르기">🏠 다른 게임</a>
-  <button id="recOpenBtn" type="button" aria-label="기록 남기기">🏆 기록</button>
   <button id="shareBtn" type="button" aria-label="링크 복사">링크 복사</button>
+  <button id="recOpenBtn" class="recbtn" type="button" aria-label="기록 남기기">🏆 기록</button>
 </div>
 
 <p class="tagline">같은 선을 두 번 지나지 않고, 한 번에 모든 선을 이어 보세요.</p>
